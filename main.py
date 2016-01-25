@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use("Qt5Agg", force=True)
 __author__ = 'vlad'
 
 if __name__ == '__main__':

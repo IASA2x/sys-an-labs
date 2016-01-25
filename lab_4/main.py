@@ -1,5 +1,7 @@
 __author__ = 'vlad'
 # coding: utf8
+import matplotlib
+matplotlib.use("Qt5Agg", force=True)
 
 import sys
 

@@ -8,7 +8,7 @@ from lab_4.calculate_optimal_degrees import *
 from lab_4.solve_custom import SolveExpTh
 from lab_4.solve import Solve
 
-form_class, base_class = loadUiType('lab_3/bruteforce_window.ui')
+form_class, base_class = loadUiType('lab_4/bruteforce_window.ui')
 
 
 class BruteForceWindow(QDialog, form_class):

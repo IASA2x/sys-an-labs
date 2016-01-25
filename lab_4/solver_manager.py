@@ -197,5 +197,4 @@ class SolverManager(object):
                 rdr = t
         if rdr != np.inf:
             self.rdr = rdr
-        print(self.rdr)
 
