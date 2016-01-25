@@ -1,12 +1,94 @@
 __author__ = 'strike'
 from copy import deepcopy
 
-from scipy import special
-from openpyxl import Workbook
+#from scipy import special
+#from openpyxl import Workbook
 
 from lab_2.system_solve import *
 from tabulate import tabulate as tb
 
+
+def eval_chebyt(n, x):
+    t0 =np.poly1d([1])
+    t1 =np.poly1d([1,0])
+    if n == 0:
+        t = t0
+    elif n == 1:
+        t = t1
+    else:
+        for i in range(1,n):
+            t = np.poly1d([2,0])*t1 -t0
+            t0 = t1
+            t1 = t
+    return t(x)
+
+def eval_sh_chebyt(n, x):
+    t0 =np.poly1d([1])
+    t1 =np.poly1d([1,0])
+    if n == 0:
+        t = t0
+    elif n == 1:
+        t = t1
+    else:
+        for i in range(1,n):
+            t = np.poly1d([2,0])*t1 -t0
+            t0 = t1
+            t1 = t
+    return t(np.poly1d([2,-1]))(x)
+
+def eval_sh_chebyu(n, x):
+    t0 =np.poly1d([1])
+    t1 =np.poly1d([2,0])
+    if n == 0:
+        t = t0
+    elif n == 1:
+        t = t1
+    else:
+        for i in range(1,n):
+            t = np.poly1d([2,0])*t1 -t0
+            t0 = t1
+            t1 = t
+            print(t)
+    return t(np.poly1d([2,-1]))(x)
+
+def eval_sh_legendre(n, x):
+    if n == 0:
+        return 1
+    elif n ==1:
+        return 2*x -1
+    t0 = np.poly1d([1])
+    t1 = np.poly1d([1,0])
+    for i in range(2,n+1):
+        t = ((2*i - 1)*np.poly1d([1, 0])*t1 - (i-1)*t0)/i
+        t0 = t1
+        t1 = t
+    return t(np.poly1d([2,-1]))(x)
+
+def eval_laguerre(n, x):
+    if n == 0:
+        return 0.5
+    elif n ==1:
+        return 1-x
+    t0 = np.poly1d([1])
+    t1 = np.poly1d([-1,1])
+    for i in range(2,n+1):
+        t = ((2*i - 1 - np.poly1d([1, 0]))*t1 - (i-1)**2 * t0)
+        t0 = t1
+        t1 = t
+    return t(x)
+
+def eval_hermite(n, x):
+    if n == 0:
+        return 0.5
+    elif n ==1:
+        return 2*x
+    t0 = np.poly1d([1])
+    t1 = np.poly1d([2,0])
+    for i in range(2,n+1):
+        t = np.poly1d([2, 0])*t1 - (2*i-2) * t0
+        t0 = t1
+        t1 = t
+    return t(x)
 
 class Solve(object):
 
@@ -104,13 +186,13 @@ class Solve(object):
         :return: function
         '''
         if self.poly_type =='chebyshev':
-            self.poly_f = special.eval_sh_chebyt
+            self.poly_f = eval_sh_chebyt
         elif self.poly_type == 'legendre':
-            self.poly_f = special.eval_sh_legendre
+            self.poly_f = eval_sh_legendre
         elif self.poly_type == 'laguerre':
-            self.poly_f = special.eval_laguerre
+            self.poly_f = eval_laguerre
         elif self.poly_type == 'hermit':
-            self.poly_f = special.eval_hermite
+            self.poly_f = eval_hermite
 
     def built_A(self):
         '''
@@ -257,90 +339,90 @@ class Solve(object):
         for i in range(self.Y_.shape[1]):
             self.error.append(np.linalg.norm(self.Y_[:,i] - self.F_[:,i],np.inf))
 
-    def save_to_file(self):
-        wb = Workbook()
-        #get active worksheet
-        ws = wb.active
-
-        l = [None]
-
-        ws.append(['Input data: X'])
-        for i in range(self.n):
-             ws.append(l+self.datas[i,:self.degf[3]].tolist()[0])
-        ws.append([])
-
-        ws.append(['Input data: Y'])
-        for i in range(self.n):
-             ws.append(l+self.datas[i,self.degf[2]:self.degf[3]].tolist()[0])
-        ws.append([])
-
-        ws.append(['X normalised:'])
-        for i in range(self.n):
-             ws.append(l+self.data[i,:self.degf[2]].tolist()[0])
-        ws.append([])
-
-        ws.append(['Y normalised:'])
-        for i in range(self.n):
-             ws.append(l+self.data[i,self.degf[2]:self.degf[3]].tolist()[0])
-        ws.append([])
-
-
-        ws.append(['matrix B:'])
-        for i in range(self.n):
-             ws.append(l+self.B[i].tolist()[0])
-        ws.append([])
-
-        ws.append(['matrix A:'])
-        for i in range(self.A.shape[0]):
-             ws.append(l+self.A[i].tolist()[0])
-        ws.append([])
-
-        ws.append(['matrix Lambda:'])
-        for i in range(self.Lamb.shape[0]):
-             ws.append(l+self.Lamb[i].tolist()[0])
-        ws.append([])
-
-        for j in range(len(self.Psi)):
-             s = 'matrix Psi%i:' %(j+1)
-             ws.append([s])
-             for i in range(self.n):
-                  ws.append(l+self.Psi[j][i].tolist()[0])
-             ws.append([])
-
-        ws.append(['matrix a:'])
-        for i in range(self.mX):
-             ws.append(l+self.a[i].tolist()[0])
-        ws.append([])
-
-        for j in range(len(self.Fi)):
-             s = 'matrix F%i:' %(j+1)
-             ws.append([s])
-             for i in range(self.Fi[j].shape[0]):
-                  ws.append(l+self.Fi[j][i].tolist()[0])
-             ws.append([])
-
-        ws.append(['matrix c:'])
-        for i in range(len(self.X)):
-             ws.append(l+self.c[i].tolist()[0])
-        ws.append([])
-
-        ws.append(['Y rebuilt normalized :'])
-        for i in range(self.n):
-             ws.append(l+self.F[i].tolist()[0])
-        ws.append([])
-
-        ws.append(['Y rebuilt :'])
-        for i in range(self.n):
-             ws.append(l+self.F_[i].tolist()[0])
-        ws.append([])
-
-        ws.append(['Error normalised (Y - F)'])
-        ws.append(l + self.norm_error)
-
-        ws.append(['Error (Y_ - F_))'])
-        ws.append(l+self.error)
-
-        wb.save(self.filename_output)
+    # def save_to_file(self):
+    #     wb = Workbook()
+    #     #get active worksheet
+    #     ws = wb.active
+    #
+    #     l = [None]
+    #
+    #     ws.append(['Input data: X'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.datas[i,:self.degf[3]].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['Input data: Y'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.datas[i,self.degf[2]:self.degf[3]].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['X normalised:'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.data[i,:self.degf[2]].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['Y normalised:'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.data[i,self.degf[2]:self.degf[3]].tolist()[0])
+    #     ws.append([])
+    #
+    #
+    #     ws.append(['matrix B:'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.B[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['matrix A:'])
+    #     for i in range(self.A.shape[0]):
+    #          ws.append(l+self.A[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['matrix Lambda:'])
+    #     for i in range(self.Lamb.shape[0]):
+    #          ws.append(l+self.Lamb[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     for j in range(len(self.Psi)):
+    #          s = 'matrix Psi%i:' %(j+1)
+    #          ws.append([s])
+    #          for i in range(self.n):
+    #               ws.append(l+self.Psi[j][i].tolist()[0])
+    #          ws.append([])
+    #
+    #     ws.append(['matrix a:'])
+    #     for i in range(self.mX):
+    #          ws.append(l+self.a[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     for j in range(len(self.Fi)):
+    #          s = 'matrix F%i:' %(j+1)
+    #          ws.append([s])
+    #          for i in range(self.Fi[j].shape[0]):
+    #               ws.append(l+self.Fi[j][i].tolist()[0])
+    #          ws.append([])
+    #
+    #     ws.append(['matrix c:'])
+    #     for i in range(len(self.X)):
+    #          ws.append(l+self.c[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['Y rebuilt normalized :'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.F[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['Y rebuilt :'])
+    #     for i in range(self.n):
+    #          ws.append(l+self.F_[i].tolist()[0])
+    #     ws.append([])
+    #
+    #     ws.append(['Error normalised (Y - F)'])
+    #     ws.append(l + self.norm_error)
+    #
+    #     ws.append(['Error (Y_ - F_))'])
+    #     ws.append(l+self.error)
+    #
+    #     wb.save(self.filename_output)
 
     def show(self):
         text = []
@@ -410,4 +492,4 @@ class Solve(object):
         self.built_c()
         self.built_F()
         self.built_F_()
-        self.save_to_file()
+        #self.save_to_file()
