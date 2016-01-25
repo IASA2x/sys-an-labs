@@ -15,14 +15,14 @@ def determine_deg(a, p1, p2, p3):
         a.built_F()
         a.built_F_()
         res = np.linalg.norm(a.norm_error, np.inf)
-        print (i, j, k), ':', np.linalg.norm(a.norm_error, np.inf)
+        print((i, j, k), ':', np.linalg.norm(a.norm_error, np.inf))
         return (i, j, k), res, a.norm_error
     a.define_data()
     a.norm_data()
     a.define_norm_vectors()
     a.built_B()
     a.poly_func()
-    d = map(_brute, product(p1, p2, p3))
+    d = list(map(_brute, list(product(p1, p2, p3))))
     best = d[0]
     for i in d:
         if i[1] < best[1]:
